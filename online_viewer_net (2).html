@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZBase - /b/ - Random</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #eef2ff;
+            font-family: Arial, sans-serif;
+            font-size: 10pt;
+            color: #000;
+            padding: 10px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            color: #af0a0f;
+            font-size: 28pt;
+            font-weight: bold;
+        }
+
+        .board-title {
+            color: #800;
+            font-size: 18pt;
+            margin: 10px 0;
+        }
+
+        .post-form {
+            background-color: #d6daf0;
+            border: 1px solid #b7c5d9;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+
+        .post-form table {
+            width: 100%;
+        }
+
+        .post-form td {
+            padding: 3px;
+        }
+
+        .post-form input[type="text"],
+        .post-form textarea {
+            width: 100%;
+            padding: 4px;
+            border: 1px solid #aaa;
+            background-color: #fff;
+        }
+
+        .post-form input[type="file"] {
+            width: 100%;
+        }
+
+        .post-form textarea {
+            height: 100px;
+            font-family: Arial, sans-serif;
+        }
+
+        .post-form button {
+            background-color: #d6daf0;
+            border: 1px solid #aaa;
+            padding: 5px 15px;
+            cursor: pointer;
+        }
+
+        .post-form button:hover {
+            background-color: #c5cbe0;
+        }
+
+        .post-form button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .thread {
+            margin-bottom: 30px;
+            padding: 5px;
+        }
+
+        .thread:hover {
+            background-color: #d6daf0;
+        }
+
+        .post {
+            background-color: #d6daf0;
+            border: 1px solid #b7c5d9;
+            padding: 8px;
+            margin-bottom: 10px;
+        }
+
+        .post-info {
+            color: #117743;
+            font-weight: bold;
+        }
+
+        .post-name {
+            color: #117743;
+            font-weight: bold;
+        }
+
+        .post-date {
+            color: #000;
+        }
+
+        .post-no {
+            color: #000;
+            cursor: pointer;
+        }
+
+        .post-no:hover {
+            text-decoration: underline;
+        }
+
+        .post-content {
+            margin-top: 8px;
+            line-height: 1.4;
+        }
+
+        .post-image {
+            float: left;
+            margin: 5px 20px 10px 0;
+        }
+
+        .post-image img {
+            max-width: 250px;
+            max-height: 250px;
+            border: 1px solid #ccc;
+            cursor: pointer;
+        }
+
+        .reply {
+            margin-left: 40px;
+            margin-top: 5px;
+        }
+
+        .reply .post {
+            background-color: #d6daf0;
+        }
+
+        .greentext {
+            color: #789922;
+        }
+
+        .quote-link {
+            color: #d00;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .quote-link:hover {
+            text-decoration: underline;
+        }
+
+        .post-delete {
+            color: #d00;
+            text-decoration: none;
+            cursor: pointer;
+            font-size: 9pt;
+            margin-left: 10px;
+        }
+
+        .post-delete:hover {
+            color: #f00;
+            text-decoration: underline;
+        }
+
+        .reply-button {
+            color: #34345c;
+            cursor: pointer;
+            font-size: 9pt;
+            margin-left: 10px;
+        }
+
+        .reply-button:hover {
+            text-decoration: underline;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid #b7c5d9;
+            margin: 20px 0;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .error {
+            background-color: #ffdddd;
+            border: 1px solid #ff0000;
+            padding: 10px;
+            margin: 10px 0;
+            color: #cc0000;
+        }
+
+        .reply-count {
+            font-size: 9pt;
+            color: #666;
+            margin-left: 10px;
+        }
+
+        #replyingTo {
+            background-color: #ffffee;
+            border: 1px solid #d9d900;
+            padding: 5px 10px;
+            margin-bottom: 5px;
+            font-size: 9pt;
+        }
+
+        #replyingTo a {
+            color: #d00;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ZBase</h1>
+        <div class="board-title">/b/ - Random</div>
+    </div>
+
+    <div id="error-container"></div>
+
+    <div class="post-form">
+        <div id="replyingTo" style="display: none;"></div>
+        <form id="newThreadForm">
+            <table>
+                <tr>
+                    <td>Name</td>
+                    <td><input type="text" id="name" placeholder="Anonymous"></td>
+                </tr>
+                <tr>
+                    <td>Subject</td>
+                    <td><input type="text" id="subject"></td>
+                </tr>
+                <tr>
+                    <td>Comment</td>
+                    <td><textarea id="comment" placeholder="Type your message here..." required></textarea></td>
+                </tr>
+                <tr>
+                    <td>File</td>
+                    <td><input type="file" id="file" accept="image/*"></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td><button type="submit" id="submitBtn">Post</button></td>
+                </tr>
+            </table>
+        </form>
+    </div>
+
+    <hr>
+
+    <div id="loading" class="loading">Loading threads...</div>
+    <div id="threads"></div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, deleteDoc, doc, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getStorage, ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyByK38wgLxCK7RCIscsqjrUJZ3zVLJilyI",
+            authDomain: "zbase-10a5f.firebaseapp.com",
+            projectId: "zbase-10a5f",
+            storageBucket: "zbase-10a5f.firebasestorage.app",
+            messagingSenderId: "44497245181",
+            appId: "1:44497245181:web:6ac36f03c55b3ae5257f94"
+        };
+
+        let app, db, storage;
+        let replyingToThreadId = null;
+        let replyingToPostNo = null;
+        
+        try {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            storage = getStorage(app);
+            console.log("Firebase initialized successfully");
+        } catch (error) {
+            showError("Failed to initialize Firebase. Please check your configuration.");
+            console.error(error);
+        }
+
+        function showError(message) {
+            const errorContainer = document.getElementById('error-container');
+            errorContainer.innerHTML = `<div class="error">${message}</div>`;
+        }
+
+        function formatPost(text) {
+            const lines = text.split('\n');
+            return lines.map(line => {
+                // Check for >>quotes
+                if (line.match(/^>>\d+/)) {
+                    return `<span class="quote-link">${line}</span>`;
+                }
+                // Check for greentext
+                if (line.startsWith('>')) {
+                    return `<span class="greentext">${line}</span>`;
+                }
+                return line;
+            }).join('<br>');
+        }
+
+        async function uploadImageToImgur(file) {
+            if (!file) return null;
+            
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    try {
+                        const base64Image = e.target.result.split(',')[1];
+                        
+                        const response = await fetch('https://api.imgur.com/3/image', {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': 'Client-ID 534b9dd25ac5dfd',
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                image: base64Image,
+                                type: 'base64'
+                            })
+                        });
+
+                        const data = await response.json();
+                        if (data.success) {
+                            resolve(data.data.link);
+                        } else {
+                            reject(new Error('Imgur upload failed'));
+                        }
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function createPost(name, subject, comment, file, threadId = null) {
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Posting...';
+
+            try {
+                let imageURL = null;
+                if (file) {
+                    submitBtn.textContent = 'Uploading image...';
+                    imageURL = await uploadImageToImgur(file);
+                }
+
+                const postData = {
+                    name: name || 'Anonymous',
+                    subject: subject || '',
+                    comment: comment,
+                    imageURL: imageURL,
+                    timestamp: serverTimestamp(),
+                    createdAt: new Date().toISOString(),
+                    threadId: threadId,
+                    isOP: threadId === null,
+                    bumpTime: serverTimestamp()
+                };
+
+                const docRef = await addDoc(collection(db, 'posts'), postData);
+
+                // If replying to a thread, update the thread's bump time
+                if (threadId) {
+                    const threadDoc = doc(db, 'posts', threadId);
+                    await deleteDoc(threadDoc);
+                    await addDoc(collection(db, 'posts'), {
+                        ...postData,
+                        threadId: null,
+                        isOP: true
+                    });
+                }
+
+                document.getElementById('newThreadForm').reset();
+                cancelReply();
+            } catch (error) {
+                console.error("Error creating post:", error);
+                showError("Failed to create post: " + error.message);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Post';
+            }
+        }
+
+        async function deletePost(postId, isOP) {
+            if (!confirm('Are you sure you want to delete this post?')) {
+                return;
+            }
+
+            try {
+                await deleteDoc(doc(db, 'posts', postId));
+                
+                // If it's an OP, delete all replies too
+                if (isOP) {
+                    const repliesQuery = query(collection(db, 'posts'), where('threadId', '==', postId));
+                    const repliesSnapshot = await getDocs(repliesQuery);
+                    
+                    const deletePromises = repliesSnapshot.docs.map(replyDoc => 
+                        deleteDoc(doc(db, 'posts', replyDoc.id))
+                    );
+                    
+                    await Promise.all(deletePromises);
+                }
+                
+                console.log('Post deleted successfully');
+            } catch (error) {
+                console.error("Error deleting post:", error);
+                showError("Failed to delete post: " + error.message);
+            }
+        }
+
+        function setReplyTo(threadId, postNo) {
+            replyingToThreadId = threadId;
+            replyingToPostNo = postNo;
+            
+            const replyingToDiv = document.getElementById('replyingTo');
+            replyingToDiv.style.display = 'block';
+            replyingToDiv.innerHTML = `Replying to thread No.${postNo.slice(-6)} <a onclick="window.cancelReply()">[Cancel]</a>`;
+            
+            const commentBox = document.getElementById('comment');
+            commentBox.value = `>>${postNo.slice(-6)}\n` + commentBox.value;
+            commentBox.focus();
+        }
+
+        function cancelReply() {
+            replyingToThreadId = null;
+            replyingToPostNo = null;
+            document.getElementById('replyingTo').style.display = 'none';
+        }
+
+        function renderPost(post, postId, isReply = false) {
+            const date = post.timestamp ? 
+                new Date(post.timestamp.seconds * 1000).toLocaleString() : 
+                new Date(post.createdAt).toLocaleString();
+
+            let imageHTML = '';
+            if (post.imageURL) {
+                imageHTML = `
+                    <div class="post-image">
+                        <a href="${post.imageURL}" target="_blank">
+                            <img src="${post.imageURL}" alt="Post image">
+                        </a>
+                    </div>
+                `;
+            }
+
+            const postNo = postId.slice(-6);
+            const replyButton = !isReply ? `<span class="reply-button" onclick="window.setReplyTo('${postId}', '${postId}')">[Reply]</span>` : '';
+
+            return `
+                <div class="post">
+                    <div class="post-info">
+                        <span class="post-name">${post.name}</span>
+                        ${post.subject ? `<span class="post-subject"> ${post.subject}</span>` : ''}
+                        <span class="post-date"> ${date}</span>
+                        <span class="post-no" onclick="window.setReplyTo('${post.threadId || postId}', '${postId}')"> No.${postNo}</span>
+                        ${replyButton}
+                        <a class="post-delete" onclick="window.deletePost('${postId}', ${post.isOP})">[Delete]</a>
+                    </div>
+                    ${imageHTML}
+                    <div class="post-content">
+                        ${formatPost(post.comment)}
+                    </div>
+                    <div style="clear: both;"></div>
+                </div>
+            `;
+        }
+
+        function loadPosts() {
+            const threadsContainer = document.getElementById('threads');
+            const loadingDiv = document.getElementById('loading');
+
+            // Load all posts
+            const allPostsQuery = query(
+                collection(db, 'posts'), 
+                orderBy('timestamp', 'desc')
+            );
+            
+            onSnapshot(allPostsQuery, (snapshot) => {
+                loadingDiv.style.display = 'none';
+                threadsContainer.innerHTML = '';
+
+                const threads = {};
+                const replies = {};
+
+                // Organize posts into threads and replies
+                snapshot.forEach((doc) => {
+                    const post = { id: doc.id, data: doc.data() };
+                    
+                    if (post.data.isOP) {
+                        threads[doc.id] = post;
+                        replies[doc.id] = [];
+                    }
+                });
+
+                // Add replies to their threads
+                snapshot.forEach((doc) => {
+                    const post = { id: doc.id, data: doc.data() };
+                    
+                    if (!post.data.isOP && post.data.threadId && replies[post.data.threadId]) {
+                        replies[post.data.threadId].push(post);
+                    }
+                });
+
+                // Render threads
+                Object.values(threads).forEach(thread => {
+                    const threadDiv = document.createElement('div');
+                    threadDiv.className = 'thread';
+                    
+                    let threadHTML = renderPost(thread.data, thread.id, false);
+                    
+                    const threadReplies = replies[thread.id] || [];
+                    if (threadReplies.length > 0) {
+                        threadHTML += `<span class="reply-count">${threadReplies.length} ${threadReplies.length === 1 ? 'reply' : 'replies'}</span>`;
+                    }
+
+                    threadReplies.forEach(reply => {
+                        threadHTML += `<div class="reply">${renderPost(reply.data, reply.id, true)}</div>`;
+                    });
+
+                    threadDiv.innerHTML = threadHTML;
+                    threadsContainer.appendChild(threadDiv);
+                });
+
+                if (Object.keys(threads).length === 0) {
+                    threadsContainer.innerHTML = '<div class="loading">No threads yet. Start one!</div>';
+                }
+            }, (error) => {
+                console.error("Error loading posts:", error);
+                showError("Failed to load posts: " + error.message);
+                loadingDiv.style.display = 'none';
+            });
+        }
+
+        // Form submission
+        document.getElementById('newThreadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('name').value;
+            const subject = document.getElementById('subject').value;
+            const comment = document.getElementById('comment').value;
+            const fileInput = document.getElementById('file');
+            const file = fileInput.files[0] || null;
+
+            await createPost(name, subject, comment, file, replyingToThreadId);
+        });
+
+        // Make functions available globally
+        window.deletePost = deletePost;
+        window.setReplyTo = setReplyTo;
+        window.cancelReply = cancelReply;
+
+        // Load posts on page load
+        if (db) {
+            loadPosts();
+        }
+    </script>
+</body>
+</html>
